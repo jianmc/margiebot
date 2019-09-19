@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net.Http;
 using System.Text.RegularExpressions;
-using Bazam.Http;
+using System.Threading.Tasks;
 using MargieBot.SampleResponders.Models;
 using Newtonsoft.Json.Linq;
 
@@ -29,7 +30,7 @@ namespace MargieBot.SampleResponders
                 && (Regex.IsMatch(context.Message.Text, WEATHER_NOTERM_REGEX) || Regex.IsMatch(context.Message.Text, WEATHER_LOCATIONTERM_REGEX));
         }
 
-        public BotMessage GetResponse(ResponseContext context)
+        public async Task<BotMessage> GetResponse(ResponseContext context)
         {
             string city = Regex.Match(context.Message.Text, WEATHER_LOCATIONTERM_REGEX).Groups["cityTerm"].Value;
             string state = Regex.Match(context.Message.Text, WEATHER_LOCATIONTERM_REGEX).Groups["stateTerm"].Value;
@@ -54,14 +55,14 @@ namespace MargieBot.SampleResponders
                     {
                         WeatherLookupCache.Remove(city + state);
 
-                        weatherReport = GetWeatherReport(city, state);
+                        weatherReport = await GetWeatherReport(city, state);
 
                         WeatherLookupCache.Add(city + state, weatherReport);
                     }
                 }
                 else
                 {
-                    weatherReport = GetWeatherReport(city, state);
+                    weatherReport = await GetWeatherReport(city, state);
 
                     WeatherLookupCache.Add(city + state, weatherReport);
                 }
@@ -89,15 +90,15 @@ namespace MargieBot.SampleResponders
             }
         }
 
-        protected string GetWeatherReport(string city, string state)
+        protected async Task<string> GetWeatherReport(string city, string state)
         {
             string resultWeatherReport = string.Empty;
 
-            NoobWebClient client = new NoobWebClient();
+            HttpClient client = new HttpClient();
 
             string requestUrl = string.Format("http://api.wunderground.com/api/{0}/conditions/q/{1}/{2}.json", WundergroundAPIKey, state.ToUpperInvariant(), city.Replace(' ', '_'));
 
-            resultWeatherReport = client.DownloadString(requestUrl, RequestMethod.Get).GetAwaiter().GetResult();
+            resultWeatherReport = await client.GetStringAsync(requestUrl);
 
             return resultWeatherReport;
         }

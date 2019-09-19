@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using MargieBot.SampleResponders.Models;
 
 namespace MargieBot.SampleResponders
@@ -35,7 +36,7 @@ namespace MargieBot.SampleResponders
             return !context.Message.User.IsSlackbot && Regex.IsMatch(context.Message.Text, SCORE_REGEX);
         }
 
-        public BotMessage GetResponse(ResponseContext context)
+        public async Task<BotMessage> GetResponse(ResponseContext context)
         {
             // perform scoring
             List<ScoringResult> scoringResults = new List<ScoringResult>();

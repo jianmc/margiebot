@@ -28,7 +28,8 @@ namespace MargieBot.ConsoleHost
         /// Boom! You have your own bot.
         /// </summary>
         /// <returns>A list of the responders this bot should respond with.</returns>
-        public IEnumerable<IResponder> GetResponders(Bot bot, IConfigurationRoot appConfig)
+        public IEnumerable<IResponder> GetResponders<T>(Bot<T> bot, IConfigurationRoot appConfig)
+            where T : MargieBot.WebSockets.IMargieBotWebSocket
         {
             // Some of these are more complicated than they need to be for the sake of example
             var responders = new List<IResponder>();

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
@@ -8,10 +9,12 @@ namespace MargieBot.WebSockets
 {
     public delegate void MargieBotWebSocketMessageReceivedEventHandler(object sender, string message);
 
-    public class MargieBotWebSocket : IDisposable
+    public sealed class MargieBotWebSocket : IDisposable, IMargieBotWebSocket
     {
         ClientWebSocket _webSocket = null;
         private static UTF8Encoding _encoding = new UTF8Encoding();
+
+        public bool IsWebSocketOpen => _webSocket?.State == WebSocketState.Open;
 
         public async Task Connect(string uri)
         {
@@ -47,49 +50,49 @@ namespace MargieBot.WebSockets
         #endregion
 
         #region Internal utility
-		private async Task Listen()
-		{
-			ArraySegment<Byte> buffer = new ArraySegment<byte>(new Byte[1024]);
+        private async Task Listen()
+        {
+            ArraySegment<Byte> buffer = new ArraySegment<byte>(new Byte[1024]);
             WebSocketReceiveResult result = null;
 
-			while (_webSocket.State == WebSocketState.Open)
-			{
-				using (var ms = new MemoryStream())
-				{
-					do
-					{
-						result = await _webSocket.ReceiveAsync(buffer, CancellationToken.None);
+            while (_webSocket.State == WebSocketState.Open)
+            {
+                using (var ms = new MemoryStream())
+                {
+                    do
+                    {
+                        result = await _webSocket.ReceiveAsync(buffer, CancellationToken.None);
 
-						if (result.MessageType == WebSocketMessageType.Close)
-						{
-							await _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None);
-							break;
-						}
-						else
-						{
-							ms.Write(buffer.Array, buffer.Offset, result.Count);
-						}
-					}
-					while (!result.EndOfMessage);
+                        if (result.MessageType == WebSocketMessageType.Close)
+                        {
+                            await _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None);
+                            break;
+                        }
+                        else
+                        {
+                            ms.Write(buffer.Array, buffer.Offset, result.Count);
+                        }
+                    }
+                    while (!result.EndOfMessage);
 
-					ms.Seek(0, SeekOrigin.Begin);
+                    ms.Seek(0, SeekOrigin.Begin);
 
-					if (result.MessageType == WebSocketMessageType.Text)
-					{
-						using (var reader = new StreamReader(ms, Encoding.UTF8))
-						{
-							var stringData = await reader.ReadToEndAsync();
+                    if (result.MessageType == WebSocketMessageType.Text)
+                    {
+                        using (var reader = new StreamReader(ms, Encoding.UTF8))
+                        {
+                            var stringData = await reader.ReadToEndAsync();
 
 #if DEBUG
-							Console.WriteLine($"Receive: {stringData}");
+                            Console.WriteLine($"Receive: {stringData}");
 #endif
 
-							OnMessage?.Invoke(this, stringData);
-						}
-					}
-				}
-			}
-		}
+                            OnMessage?.Invoke(this, stringData);
+                        }
+                    }
+                }
+            }
+        }
         #endregion
 
         #region IDisposable

@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using System.Xml.Linq;
-using Bazam.Http;
 
 namespace MargieBot.SampleResponders
 {
@@ -24,19 +25,18 @@ namespace MargieBot.SampleResponders
             return (context.Message.MentionsBot || context.Message.ChatHub.Type == SlackChatHubType.DM) && Regex.IsMatch(context.Message.Text, DEFINE_REGEX);
         }
 
-        public BotMessage GetResponse(ResponseContext context)
+        public async Task<BotMessage> GetResponse(ResponseContext context)
         {
             string term = WebUtility.UrlEncode(Regex.Match(context.Message.Text, DEFINE_REGEX).Groups["term"].Value);
 
-            NoobWebClient client = new NoobWebClient();
-            string definitionData = client.DownloadString(
+            HttpClient client = new HttpClient();
+            string definitionData =  await client.GetStringAsync(
                 string.Format(
                     "http://www.dictionaryapi.com/api/v1/references/collegiate/xml/{0}?key={1}", 
                     term,
                     ApiKey
-                ),
-                RequestMethod.Get
-            ).GetAwaiter().GetResult();
+                )
+            );
 
             XElement root = XElement.Parse(definitionData);
 

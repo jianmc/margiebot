@@ -12,7 +12,7 @@ namespace MargieBot.ConsoleHost
         public static void Main(string[] args)
         {
             // let's make a bot!
-            var bot = new Bot();
+            var bot = new Bot<MargieBot.WebSockets.MargieBotWebSocket>();
 
             // load the slack key out of the config.json file - remember to copy the "config.sample" file from the repo to "config.json" and replace the default value with your bot's slack key.
             if(File.Exists("config.json"))
@@ -44,7 +44,7 @@ namespace MargieBot.ConsoleHost
             // connect
             var slackApiKey = _appConfig["slackApiKey"];
             Console.WriteLine($@"Connecting with Slack key ""{slackApiKey}""...");
-            bot.Connect(slackApiKey).Wait();
+            bot.Connect<MargieBot.WebSockets.MargieBotWebSocket>(slackApiKey).Wait();
             Console.WriteLine("Connected!");
 
             // loop and listen. entering "exit" will end the program. entering the name of a chat hub (like "@jammer" or "#news") that the bot's connected to, followed by a message,

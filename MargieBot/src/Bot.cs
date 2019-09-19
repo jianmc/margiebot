@@ -6,7 +6,6 @@ using System.Net.Http;
 using System.Security.Authentication;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Bazam.Http;
 using MargieBot.Utilities;
 using MargieBot.WebSockets;
 using Newtonsoft.Json;
@@ -14,7 +13,7 @@ using Newtonsoft.Json.Linq;
 
 namespace MargieBot
 {
-    public class Bot
+    public class Bot<T> where T : IMargieBotWebSocket //, new()
     {
         #region Private properties
         private string _BotNameRegex;
@@ -34,7 +33,7 @@ namespace MargieBot
         }
 
         private Dictionary<string, string> UserNameCache { get; set; } = new Dictionary<string, string>();
-        private MargieBotWebSocket WebSocket { get; set; }
+        private T WebSocket { get; set; }
         private string SlackRtmStartHelp = "https://api.slack.com/methods/rtm.start";
         #endregion
 
@@ -75,7 +74,7 @@ namespace MargieBot
 
         public bool IsConnected
         {
-            get { return ConnectedSince != null; }
+            get { return WebSocket != null && WebSocket.IsWebSocketOpen; }
         }
 
         private DateTime? _ConnectedSince = null;
@@ -104,7 +103,7 @@ namespace MargieBot
         /// Connects this bot to Slack using the slack API key provided. Set yours up at https://yourteam.slack.com/apps/manage.
         /// </summary>
         /// <param name="slackKey">The API key the bot will use to identify itself to the Slack API.</param>
-        public async Task Connect(string slackKey)
+        public async Task Connect<R>(string slackKey) where R : T, new()
         {
             SlackKey = slackKey;
 
@@ -221,7 +220,7 @@ namespace MargieBot
             }
 
             // set up the websocket
-            WebSocket = new MargieBotWebSocket();
+            WebSocket = new R();
             WebSocket.OnOpen += (object sender, EventArgs e) =>
             {
                 // set connection-related properties
@@ -329,7 +328,7 @@ namespace MargieBot
                         if (responder != null && responder.CanRespond(context))
                         {
                             await SendIsTyping(message.ChatHub);
-                            await Say(responder.GetResponse(context), context);
+                            await Say(await responder.GetResponse(context), context);
                             context.BotHasResponded = true;
                         }
                     }
@@ -370,7 +369,7 @@ namespace MargieBot
                 throw new ArgumentException($"When calling the {nameof(Say)}() method, the {nameof(message)} parameter must have its {nameof(message.ChatHub)} property set.");
             }
 
-            var client = new NoobWebClient();
+            var client = new HttpClient();
             var values = new List<string>() {
                     "token", SlackKey,
                     "channel", chatHubID,
@@ -384,10 +383,9 @@ namespace MargieBot
                 values.Add(JsonConvert.SerializeObject(message.Attachments));
             }
 
-            await client.DownloadString(
+            await client.PostAsync(
                 "https://slack.com/api/chat.postMessage",
-                RequestMethod.Post,
-                values.ToArray()
+                 new StringContent(JsonConvert.SerializeObject(values))
             );
         }
 

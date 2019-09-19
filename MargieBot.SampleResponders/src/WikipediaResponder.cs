@@ -1,6 +1,7 @@
 ﻿using System.Net;
+using System.Net.Http;
 using System.Text.RegularExpressions;
-using Bazam.Http;
+using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 
 namespace MargieBot.SampleResponders
@@ -15,7 +16,7 @@ namespace MargieBot.SampleResponders
             return (context.Message.ChatHub.Type == SlackChatHubType.DM || context.Message.MentionsBot) && (Regex.IsMatch(context.Message.Text, WIKI_MULTIWORD_REGEX) || Regex.IsMatch(context.Message.Text, WIKI_SINGLEWORD_REGEX));
         }
 
-        public BotMessage GetResponse(ResponseContext context)
+        public async Task<BotMessage> GetResponse(ResponseContext context)
         {
             Match match = Regex.Match(context.Message.Text, WIKI_MULTIWORD_REGEX);
             string searchTerm = string.Empty;
@@ -27,7 +28,7 @@ namespace MargieBot.SampleResponders
                 searchTerm = match.Groups["term"].Value;
             }
             string requestUrl = string.Format("http://en.wikipedia.org/w/api.php?action=query&list=search&format=json&prop=extracts&exintro=&explaintext=&srsearch={0}&utf8=&continue=", WebUtility.UrlEncode(searchTerm.Trim()));
-            string response = new NoobWebClient().DownloadString(requestUrl, RequestMethod.Get).GetAwaiter().GetResult();
+            string response = await new HttpClient().GetStringAsync(requestUrl);
             JObject responseData = JObject.Parse(response);
 
             if (responseData["query"] != null && responseData["query"]["searchinfo"] != null) {
@@ -36,7 +37,7 @@ namespace MargieBot.SampleResponders
                 if (totalHits > 0) {
                     string articleTitle = responseData["query"]["search"][0]["title"].Value<string>();
                     string articleRequestUrl = "https://en.wikipedia.org/w/api.php?format=json&action=query&prop=extracts&exintro=&explaintext=&titles=" + WebUtility.UrlEncode(articleTitle);
-                    string articleResponse = new NoobWebClient().DownloadString(articleRequestUrl, RequestMethod.Get).GetAwaiter().GetResult();
+                    string articleResponse = await new HttpClient().GetStringAsync(articleRequestUrl);
                     JObject articleData = JObject.Parse(articleResponse);
 
                     if (articleData["query"]["pages"]["-1"] == null) {

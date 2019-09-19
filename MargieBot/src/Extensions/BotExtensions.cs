@@ -5,7 +5,8 @@ namespace MargieBot
 {
     public static class BotExtensions
     {
-        public static MargieSimpleResponseChainer RespondsTo(this Bot bot, string phrase, bool isRegex = false)
+        public static MargieSimpleResponseChainer RespondsTo<T>(this Bot<T> bot, string phrase, bool isRegex = false)
+            where T : MargieBot.WebSockets.IMargieBotWebSocket
         {
             MargieSimpleResponseChainer chainer = new MargieSimpleResponseChainer();
             chainer.Responder = new SimpleResponder();

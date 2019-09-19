@@ -12,7 +12,7 @@ namespace MargieBot.Debug
         /// <param name="args"></param>
         public static void Main(string[] args)
         {
-            var bot = new Bot();
+            var bot = new Bot<MargieBot.WebSockets.MargieBotWebSocket>();
             
             // if you want to use this as a crappy integration test like i've been doing, you'll need to add
             // a config.json to the project directory
@@ -21,7 +21,7 @@ namespace MargieBot.Debug
             var botSecret = configBuilder.Build()["slackKey"];
             
             // connect
-            bot.Connect(botSecret).Wait();
+            bot.Connect<MargieBot.WebSockets.MargieBotWebSocket>(botSecret).Wait();
             
             while (true)
             {

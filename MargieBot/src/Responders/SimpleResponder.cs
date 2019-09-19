@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace MargieBot
 {
@@ -18,7 +19,7 @@ namespace MargieBot
             return CanRespondFunction(context);
         }
 
-        public BotMessage GetResponse(ResponseContext context)
+        public async Task<BotMessage> GetResponse(ResponseContext context)
         {
             if (GetResponseFunctions.Count == 0) {
                 throw new InvalidOperationException("Attempted to get a response for \"" + context.Message.Text + "\", but no valid responses have been registered.");

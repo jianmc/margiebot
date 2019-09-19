@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using MargieBot.SampleResponders.Models;
 
 namespace MargieBot.SampleResponders
@@ -12,7 +13,7 @@ namespace MargieBot.SampleResponders
             return (context.Message.MentionsBot || context.Message.ChatHub.Type == SlackChatHubType.DM) && Regex.IsMatch(context.Message.Text, @"\bscore\b", RegexOptions.IgnoreCase);
         }
 
-        public BotMessage GetResponse(ResponseContext context)
+        public async Task<BotMessage> GetResponse(ResponseContext context)
         {
             IReadOnlyDictionary<string, int> scores = context.Get<Scorebook>().GetScores();
 
