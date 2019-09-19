@@ -29,7 +29,7 @@ namespace blueC.Service.Client.WebSocket.Requests
 
         public ILogger LogUnit { get; }
 
-        public blueCWebSocketClient(ILogger logUnit)
+        public blueCWebSocketClient(ILogger logUnit = null)
         {
             this.LogUnit = logUnit;
 
@@ -78,7 +78,7 @@ namespace blueC.Service.Client.WebSocket.Requests
             this.Opened = (client) => {
                 if (client.WebSocket.State == System.Net.WebSockets.WebSocketState.Open)
                 {
-                    LogUnit.LogInformation($"Websocket Opened");
+                    LogUnit?.LogInformation($"Websocket Opened");
                     openAction?.Invoke();
                     Task.Factory.StartNew(async () =>
                     {
@@ -90,14 +90,14 @@ namespace blueC.Service.Client.WebSocket.Requests
                             if (cancelSource.IsCancellationRequested)
                             {
                                 done = true;
-                                LogUnit.LogInformation($"Websocket Expire - Cancelled");
+                                LogUnit?.LogInformation($"Websocket Expire - Cancelled");
                             }
                             else if (IsWebSocketOpen)
                             {
                                 if (keepAliveEnabled && client.LastActiveTime < DateTime.Now.Subtract(keepAliveInterval.Value.Add(keepAliveInterval.Value).Add(keepAliveInterval.Value)))
                                 {
                                     done = true;
-                                    LogUnit.LogInformation($"Websocket Expire - Closing");
+                                    LogUnit?.LogInformation($"Websocket Expire - Closing");
                                     await client?.CloseWebSocket(CancellationToken.None);
                                 }
                                 else
@@ -106,7 +106,7 @@ namespace blueC.Service.Client.WebSocket.Requests
                             else
                             {
                                 done = true;
-                                LogUnit.LogInformation($"Websocket Expire - Not Open");
+                                LogUnit?.LogInformation($"Websocket Expire - Not Open");
                             }
                         }
                     }, cancelSource.Token);
@@ -118,14 +118,14 @@ namespace blueC.Service.Client.WebSocket.Requests
             this.Closed = (client) =>
             {
                 cancelSource.Cancel();
-                LogUnit.LogInformation($"Websocket Closed");
+                LogUnit?.LogInformation($"Websocket Closed");
                 closeAction?.Invoke();
             };
 
             this.Error = (client, e) =>
             {
                 cancelSource.Cancel();
-                LogUnit.LogError($"Websocket Error", e);
+                LogUnit?.LogError($"Websocket Error", e);
                 errorAction?.Invoke(e);
             };
 
@@ -148,12 +148,12 @@ namespace blueC.Service.Client.WebSocket.Requests
                 {
                     if (DateTime.Now > lastKeepaliveWriteTime.AddMinutes(15))
                     {
-                        LogUnit.LogInformation($"Websocket Event: {message}");
+                        LogUnit?.LogInformation($"Websocket Event: {message}");
                         lastKeepaliveWriteTime = DateTime.Now;
                     }
                 }
                 else
-                    LogUnit.LogInformation($"Websocket Event: {message}");
+                    LogUnit?.LogInformation($"Websocket Event: {message}");
 
                 if (actions == null)
                     return;
@@ -200,7 +200,7 @@ namespace blueC.Service.Client.WebSocket.Requests
             {
                 if (waitFirstEvent.WaitOne(2000))
                 {
-                    LogUnit.LogInformation($"Websocket Subscribe: {firstEvent}");
+                    LogUnit?.LogInformation($"Websocket Subscribe: {firstEvent}");
                     this.MessageReceived -= WebSocket_FirstEvent;
                     return firstEvent;
                 }
