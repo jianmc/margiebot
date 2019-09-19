@@ -43,7 +43,8 @@ namespace blueC.Service.Client.WebSocket.Requests
                 while (!this.messageCollection.IsCompleted)
                     foreach (var message in this.messageCollection.GetConsumingEnumerable())
                     {
-                        MessageReceived(message, this);
+                        if (MessageReceived != null)
+                            MessageReceived(message, this);
                     }
             });
         }
