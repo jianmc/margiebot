@@ -29,6 +29,11 @@ namespace blueC.Service.Client.WebSocket.Requests
 
         public ILogger LogUnit { get; }
 
+        public blueCWebSocketClient() : this(null)
+        {
+
+        }
+
         public blueCWebSocketClient(ILogger logUnit = null)
         {
             this.LogUnit = logUnit;
