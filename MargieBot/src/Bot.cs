@@ -370,23 +370,38 @@ namespace MargieBot
             }
 
             var client = new HttpClient();
-            var values = new List<string>() {
-                    "token", SlackKey,
-                    "channel", chatHubID,
-                    "text", message.Text,
-                    "as_user", "true"
+            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", SlackKey);
+            
+            dynamic values = new {
+                    token = SlackKey,
+                    channel = chatHubID,
+                    text = message.Text,
+                    as_user = true
                 };
 
             if (message.Attachments.Count > 0)
             {
-                values.Add("attachments");
-                values.Add(JsonConvert.SerializeObject(message.Attachments));
+                values.attachments = (JsonConvert.SerializeObject(message.Attachments));
             }
 
             await client.PostAsync(
                 "https://slack.com/api/chat.postMessage",
-                 new StringContent(JsonConvert.SerializeObject(values))
+                 new StringContent(JsonConvert.SerializeObject(values), System.Text.Encoding.UTF8, "application/json")
             );
+
+            if (message.File?.content != null)
+            {
+                message.File.content.Position = 0;
+                var multiForm = new MultipartFormDataContent();
+
+                multiForm.Add(new StringContent(SlackKey), "token");
+                multiForm.Add(new StringContent(chatHubID), "channels");
+                multiForm.Add(new StringContent(message.File.title), "title");
+                multiForm.Add(new StreamContent(message.File.content), "file", message.File.filename);
+
+                var response = await client.PostAsync("https://slack.com/api/files.upload", multiForm);
+
+            }
         }
 
         /// <summary>

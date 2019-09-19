@@ -22,6 +22,8 @@ namespace blueC.Service.Client.WebSocket.Requests
         private Action<blueCWebSocketClient> Closed;
         private Action<blueCWebSocketClient, Exception> Error;
 
+        public event Action<object, string> OnMessage;
+
         public void Dispose()
         {
             CloseWebSocket(CancellationToken.None).Wait(5000);
@@ -39,12 +41,14 @@ namespace blueC.Service.Client.WebSocket.Requests
             this.LogUnit = logUnit;
 
             Task.Run( () => {
-                SpinWait.SpinUntil(() => MessageReceived != null, 60000);
+                SpinWait.SpinUntil(() => MessageReceived != null || OnMessage != null, 60000);
                 while (!this.messageCollection.IsCompleted)
                     foreach (var message in this.messageCollection.GetConsumingEnumerable())
                     {
                         if (MessageReceived != null)
                             MessageReceived(message, this);
+                        
+                        OnMessage?.Invoke(this, message);
                     }
             });
         }
@@ -195,7 +199,6 @@ namespace blueC.Service.Client.WebSocket.Requests
         private DateTime LastActiveTime;
 
         public event EventHandler OnClose;
-        public event MargieBotWebSocketMessageReceivedEventHandler OnMessage;
         public event EventHandler OnOpen;
 
         public async Task<string> OnFirstEvent(string customer, CancellationToken token)

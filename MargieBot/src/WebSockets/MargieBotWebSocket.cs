@@ -45,7 +45,7 @@ namespace MargieBot.WebSockets
 
         #region Events
         public event EventHandler OnClose;
-        public event MargieBotWebSocketMessageReceivedEventHandler OnMessage;
+        public event Action<object,string> OnMessage;
         public event EventHandler OnOpen;
         #endregion
 

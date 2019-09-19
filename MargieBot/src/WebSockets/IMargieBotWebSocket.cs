@@ -6,7 +6,7 @@ namespace MargieBot.WebSockets
     public interface IMargieBotWebSocket
     {
         event EventHandler OnClose;
-        event MargieBotWebSocketMessageReceivedEventHandler OnMessage;
+        event Action<object, string> OnMessage;
         event EventHandler OnOpen;
 
         Task Connect(string uri);
