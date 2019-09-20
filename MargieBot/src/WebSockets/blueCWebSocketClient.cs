@@ -142,6 +142,7 @@ namespace blueC.Service.Client.WebSocket.Requests
             CancellationToken token = new CancellationToken();
             await WebSocket.ConnectAsync(this.uri, token);
             this.Opened(this);
+            OnOpen?.Invoke(this, null);
         }
 
         DateTime lastKeepaliveWriteTime = DateTime.Now;
@@ -270,6 +271,7 @@ namespace blueC.Service.Client.WebSocket.Requests
                             {
                                 await WebSocket?.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None);
                                 Closed(this);
+                                OnClose?.Invoke(this, null);
                             }
                             else if (result.Count > 0 && buffer != null) 
                             {
@@ -285,6 +287,7 @@ namespace blueC.Service.Client.WebSocket.Requests
             catch (Exception)
             {
                 Closed(this);
+                OnClose?.Invoke(this, null);
             }
             finally
             {
